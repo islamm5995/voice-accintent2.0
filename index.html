@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AKYLAI</title>
+  <link rel="shortcut icon" href="./ai-removebg-preview.png" type="image/x-icon">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: black;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      margin: 10px;
+    }
+    #start-button {
+      --😀: #644dff;
+  --😀😀: #4836bb;
+  --😀😀😀: #654dff63;
+  cursor: pointer;
+  width: 184px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  font-size: 1.125em;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #fff;
+  background: var(--😀);
+  border: 2px solid var(--😀😀);
+  border-radius: .75rem;
+  box-shadow: 0 8px 0 var(--😀😀);
+  transform: skew(-10deg);
+  transition: all .1s ease;
+  filter: drop-shadow(0 15px 20px var(--😀😀😀));
+  margin-bottom: 25px;
+    }
+    #stop-button {
+      --😀: #ff0000;
+  --😀😀: #ff0000;
+  --😀😀😀: #71070763;
+  cursor: pointer;
+  width: 184px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  font-size: 1.125em;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #fff;
+  background: var(--😀);
+  border: 2px solid var(--😀😀);
+  border-radius: .75rem;
+  box-shadow: 0 8px 0 var(--😀😀);
+  transform: skew(-10deg);
+  transition: all .1s ease;
+  filter: drop-shadow(0 15px 20px var(--😀😀😀));
+    }
+    #result {
+      font-size: 18px;
+      margin-top: 20px;
+      color: rgb(0, 133, 249);
+    }
+    #status {
+      font-size: 16px;
+      color: rgb(0, 133, 249);
+    }
+
+   
+  </style>
+</head>
+<body>
+  <h1 style="color: rgb(0, 133, 249); font-size: 45px;">Акылай</h1>
+  <h1 style="color: rgb(0, 133, 249); font-size: 18px;" >Я виртуальный помощник Акылай. Чем я могу вам помочь?</h1>
+  <button id="start-button">Начать слушать</button>
+  <button id="stop-button" disabled>Перестать слушать</button>
+  <p id="result"></p>
+  <p id="status"></p>
+
+  <script>
+    const assistantName = 'Акылай';
+    const startButton = document.getElementById('start-button');
+    const stopButton = document.getElementById('stop-button');
+    const result = document.getElementById('result');
+    const status = document.getElementById('status');
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    let voices = [];
+
+    // Устанавливаем язык распознавания речи
+    recognition.lang = 'ru-RU';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    // Функция для загрузки доступных голосов
+    function populateVoiceList() {
+      voices = window.speechSynthesis.getVoices();
+    }
+
+    // Загружаем голоса при загрузке страницы и при изменении голосов
+    populateVoiceList();
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+      speechSynthesis.onvoiceschanged = populateVoiceList;
+    }
+
+    // Обработчик нажатия на кнопку "Начать слушать"
+    startButton.addEventListener('click', () => {
+      recognition.start();
+      startButton.disabled = true;
+      stopButton.disabled = false;
+      result.textContent = '';
+      status.textContent = 'Слушаю...';
+    });
+
+    // Обработчик нажатия на кнопку "Перестать слушать"
+    stopButton.addEventListener('click', () => {
+      recognition.stop();
+      startButton.disabled = false;
+      stopButton.disabled = true;
+      status.textContent = 'Прекратил слушать.';
+    });
+
+    // Обработчик события результата распознавания речи
+    recognition.addEventListener('result', (event) => {
+      const speechResult = event.results[0][0].transcript.toLowerCase();
+      result.textContent = `Вы сказали: ${speechResult}`;
+      processCommand(speechResult);
+    });
+
+    // Обработчик завершения распознавания речи
+    recognition.addEventListener('speechend', () => {
+      recognition.stop();
+      startButton.disabled = false;
+      stopButton.disabled = true;
+      status.textContent = 'Прекратил слушать.';
+    });
+
+    // Обработчик ошибок распознавания речи
+    recognition.addEventListener('error', (event) => {
+      result.textContent = `Произошла ошибка при распознавании: ${event.error}`;
+      startButton.disabled = false;
+      stopButton.disabled = true;
+      status.textContent = '';
+    });
+
+    // Функция для синтеза речи
+    function speak(text) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'ru-RU';
+
+      // Находим мужской голос для русского языка, если доступен
+      const maleVoices = voices.filter(voice => voice.lang === 'ru-RU' && voice.name.toLowerCase().includes('male'));
+      const selectedVoice = maleVoices.length > 0 ? maleVoices[0] : voices.find(voice => voice.lang === 'ru-RU');
+
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // Функция для обработки команд
+    function processCommand(command) {
+      if (command.includes('привет')) {
+        speak('привет чем могу помочь');
+      } else if (command.includes('имя')) {
+        speak(`Меня зовут ${assistantName}.`);
+      } else if (command.includes('перестань слушать')) {
+        recognition.stop();
+        startButton.disabled = false;
+        stopButton.disabled = true;
+        speak('Прекратил слушать.');
+      } else if (command.includes('который час')) {
+        const now = new Date();
+        const time = now.toLocaleTimeString('ru-RU');
+        speak(`Сейчас ${time}`);
+      } else if (command.includes('спасибо')) {
+        speak('Пожалуйста!');
+      } else if (command.includes('погода')) {
+        speak('Извините, я пока не умею сообщать погоду.');
+      } else if (command.includes('расскажи анекдот')) {
+        speak('колобок повесился, ахахахах!');
+      } else if (command.includes('кто ты воин')) {
+        speak('я ахилес сын белея');
+      } else if (command.includes('открой гугл')) {
+        speak('Открываю Google.');
+        window.open('https://www.google.com', '_blank');
+      } else if (command.includes('открой youtube')) {
+        speak('Открываю YouTube.');
+        window.open('https://www.youtube.com', '_blank');
+      } else if (command.includes('открой figma')) {
+        speak('Открываю figma.');
+        window.open('https://www.figma.com/files/team/1348299260939015794/recents-and-sharing/recently-viewed?fuid=1348299258371456614', '_blank')
+      } else if (command.includes('кто тебя создал')) {
+        speak('Меня создал Ислам Талантбеков');
+      } else {
+        speak('Извините, я не понял. Повторите, пожалуйста.');
+      }
+    }
+  </script>
+</body>
+</html>
